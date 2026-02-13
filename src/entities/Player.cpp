@@ -1,11 +1,12 @@
 #include "entities/Player.h"
-#include "Renderer2D.h"
 
 Player::Player(glm::vec2 pos, glm::vec2 size, Renderer2D& renderer)
     : Entity(pos, size),
       velocityY(0.0f),
-      speedX(300.0f),
+      speedX(200.0f),      
       onGround(true),
+      moveLeft(false),
+      moveRight(false),
       currentState(PlayerState::IDLE),
       animationTimer(0.0f),
       useRunFrame1(true)
@@ -13,13 +14,13 @@ Player::Player(glm::vec2 pos, glm::vec2 size, Renderer2D& renderer)
     textureIdle = renderer.LoadTexture("textures/dog_idle.png");
     textureRun1 = renderer.LoadTexture("textures/dog_walk1.png");
     textureRun2 = renderer.LoadTexture("textures/dog_walk2.png");
-    textureHit = renderer.LoadTexture("textures/dog_dead.png");
+    textureHit  = renderer.LoadTexture("textures/dog_dead.png");
 }
 
 void Player::ProcessInput(GLFWwindow* window)
 {
-
-    if (currentState == PlayerState::GAME_OVER) return;
+    if (currentState == PlayerState::GAME_OVER)
+        return;
 
     if (currentState == PlayerState::IDLE){
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
@@ -30,31 +31,29 @@ void Player::ProcessInput(GLFWwindow* window)
         }   
     }
 
-    //movimentaçao lateral
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    {
-        position.x -= speedX * 0.016f;
-    }
+    moveLeft =
+        glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
 
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    {
-        position.x += speedX * 0.016f;
-    }
+    moveRight =
+        glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
 
-    //pulo
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && onGround)
     {
         velocityY = 400.0f;
         onGround = false;
-        if (currentState == PlayerState::IDLE) currentState = PlayerState::RUNNING;
+
+        if (currentState == PlayerState::IDLE)
+            currentState = PlayerState::RUNNING;
     }
 }
 
-
 void Player::Update(float deltaTime)
 {
+    if (currentState == PlayerState::GAME_OVER)
+        return;
+
     velocityY -= 800.0f * deltaTime;
     position.y += velocityY * deltaTime;
 
@@ -64,6 +63,12 @@ void Player::Update(float deltaTime)
         velocityY = 0.0f;
         onGround = true;
     }
+
+    if (moveLeft)
+        position.x -= speedX * deltaTime;
+
+    if (moveRight)
+        position.x += speedX * deltaTime;
 
     if (currentState == PlayerState::RUNNING){
         animationTimer += deltaTime;
@@ -94,8 +99,9 @@ void Player::Render(Renderer2D& renderer)
             break;
         
         case PlayerState::GAME_OVER:
-        currentTexture = textureHit;
-        break;
+            currentTexture = textureHit;
+            break;
     }
+
     renderer.DrawSprite(currentTexture, position.x, position.y, size.x, size.y);
 }

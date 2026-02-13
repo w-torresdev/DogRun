@@ -22,13 +22,16 @@ public:
     void Update(float deltaTime) override;
     void Render(Renderer2D& renderer) override;
 
-    void SetState(PlayerState newState){currentState = newState;}
-    PlayerState GetState() const {return currentState;}
+    void SetState(PlayerState newState){ currentState = newState; }
+    PlayerState GetState() const { return currentState; }
 
 private:
     float velocityY;
     float speedX;
     bool onGround;
+
+    bool moveLeft;
+    bool moveRight;
 
     unsigned int textureIdle;
     unsigned int textureRun1;
